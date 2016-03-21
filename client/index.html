@@ -33,12 +33,12 @@
     factory.index = function(callback){
       $http.get('/customers').success(function(output){
         output.forEach(function(customer) {
-          console.log(customer);
+
            var timestamp = customer._id.toString().substring(0,8);
            customer.created = new Date(parseInt(timestamp, 16 ) * 1000);
         });
         customers = output;
-        console.log(customers);
+
         callback(customers);
       })
     }
@@ -56,9 +56,36 @@
       })
         callback(customers);
     }
-
     return factory
   })//END OF CUSTOMER FACTORY
+
+
+  //ORDER FACTORY
+  myApp.factory('orderFactory', function($http){
+    var orders = [];
+    var factory = {};
+
+    factory.index = function(callback){
+      $http.get('/orders').success(function (output){
+         output.forEach(function(order) {
+
+           var timestamp = order._id.toString().substring(0,8);
+           order.created = new Date(parseInt(timestamp, 16 ) * 1000);
+        });
+        orders = output;
+        console.log(orders);
+        callback(orders)
+      })
+    }
+
+    factory.create = function(info, callback){
+      $http.post('/orders', info).success(function (output){
+        orders.push(output)
+      })
+    }
+    return factory
+
+  })//END OF ORDER FACTORY
 
 
   //CUSTOMER CONTROLLER
@@ -68,6 +95,9 @@
     })
 
     $scope.create = function() {
+      if($scope.isDup()){
+        $scope.dup_msg = "Name is already taken";
+      }else {
       customerFactory.create($scope.newCustomer, function(){
         customerFactory.index(function(data){
           console.log("test");
@@ -77,6 +107,7 @@
       })
       $scope.newCustomer = {};
     }
+    }
 
     $scope.delete = function(customer){
       customerFactory.delete(customer, function(){
@@ -85,13 +116,43 @@
         })
       })
     }
+
+    $scope.isDup = function(){
+      for(var i=0; i<$scope.customers.length;i++){
+        if($scope.newCustomer !== undefined){
+          if($scope.newCustomer == $scope.customers[i].name){
+            $scope.dup_msg = "name is already in used!"
+            return true;
+          }
+        }
+      }
+      return false
+    }
+
   })//END OF CUSTOMER CONTROLLER
 
 
   //ORDERS CONTROLLER
-  myApp.controller('ordersController', function($scope, customerFactory){
+  myApp.controller('ordersController', function($scope, customerFactory, orderFactory){
+    customerFactory.index(function (data){
+      $scope.customers = data;
+     })
+    orderFactory.index(function (data){
+      $scope.orders = data;
+    })
 
-  })
+    $scope.create = function(){
+        console.log($scope.newOrder);
+      orderFactory.create($scope.newOrder, function(){
+        orderFactory.index(function(data){
+          console.log(data);
+          $scope.orders = data;
+        })
+      })
+      $scope.newOrder = {};
+    }
+
+  })//END OF ORDERS CONTROLLER
 
   </script>
 

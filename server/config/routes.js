@@ -1,4 +1,6 @@
 var customers = require('./../controllers/customers.js');
+var orders = require('./../controllers/orders.js');
+
 
   // This is our routes.js file located in server/config/routes.js
   // This is where we will define all of our routing rules!
@@ -20,4 +22,13 @@ var customers = require('./../controllers/customers.js');
       customers.delete(req, res);
     })
 
-  };
+    app.get('/orders', function(req, res){
+      orders.show(req, res);
+    })
+
+    app.post('/orders', function(req, res){
+      orders.post(req, res);
+    })
+
+
+  };//END OF EXPORTS

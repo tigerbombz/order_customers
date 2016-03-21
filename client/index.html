@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Orders And Customers</title>
+  <script src='https://ajax.googleapis.com/ajax/libs/angularjs/1.3.5/angular.min.js'/></script>
+  <script src="//ajax.googleapis.com/ajax/libs/angularjs/1.3.5/angular-route.min.js"></script>
+  <script>
+
+  var myApp = angular.module('myApp', ['ngRoute'] );
+
+  //CONFIG
+  myApp.config(function ($routeProvider){
+    $routeProvider
+    .when('/', {
+      templateUrl: 'static/partials/customers.html'
+    })
+    .when('/partial2', {
+      templateUrl: 'static/partials/orders.html'
+    })
+    .otherwise({
+      redirectTo: '/'
+    });
+
+  });//END OF CONFIG
+
+
+  //CUSTOMER FACTORY
+  myApp.factory('customerFactory', function($http){
+    var customers = [];
+    var factory = {};
+
+    factory.index = function(callback){
+      $http.get('/customers').success(function(output){
+        output.forEach(function(customer) {
+          console.log(customer);
+           var timestamp = customer._id.toString().substring(0,8);
+           customer.created = new Date(parseInt(timestamp, 16 ) * 1000);
+        });
+        customers = output;
+        console.log(customers);
+        callback(customers);
+      })
+    }
+
+
+    factory.create = function(info, callback){
+      $http.post('/customers', info).success(function (output){
+        customers.push(output);
+      })
+    }
+
+    factory.delete = function(customer, callback){
+      $http.delete('/customers/' + customer._id).success(function (output){
+        console.log(output);
+      })
+        callback(customers);
+    }
+
+    return factory
+  })//END OF CUSTOMER FACTORY
+
+
+  //CUSTOMER CONTROLLER
+  myApp.controller('customersController', function($scope, customerFactory){
+    customerFactory.index(function (data){
+      $scope.customers = data;
+    })
+
+    $scope.create = function() {
+      customerFactory.create($scope.newCustomer, function(){
+        customerFactory.index(function(data){
+          console.log("test");
+          console.log(data);
+          $scope.customers = data;
+        })
+      })
+      $scope.newCustomer = {};
+    }
+
+    $scope.delete = function(customer){
+      customerFactory.delete(customer, function(){
+        customerFactory.index(function (customer){
+          $scope.customers = customer
+        })
+      })
+    }
+  })//END OF CUSTOMER CONTROLLER
+
+
+  //ORDERS CONTROLLER
+  myApp.controller('ordersController', function($scope, customerFactory){
+
+  })
+
+  </script>
+
+</head>
+<body>
+  <div ng-app='myApp'>
+    <a href="#/">Customers</a> | <a href="#/partial2">Orders</a>
+    <div ng-view=''></div>
+  </div>
+</body>
+</html>
